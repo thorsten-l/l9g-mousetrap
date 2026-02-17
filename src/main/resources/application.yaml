@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: mousetrap
+  profiles:
+    active: default
+  output:
+    ansi:
+      enabled: ALWAYS
+  banner:
+    location: classpath:banner.txt
+  config:
+    import: optional:file:data/config.yaml
+
+logging:
+  pattern:
+    console: "%date{yyyy-MM-dd HH:mm:ss} %magenta([%thread]) %highlight(%-5level) %logger:%line - %yellow(%msg %n)"
+  level:
+    root: INFO
+    l9g: INFO
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    session:
+      timeout: 9h
+
+management:
+  server:
+    port: 9000
+  endpoints:
+    web:
+      exposure:
+        include: health,refresh
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: NEVER
+
+springdoc:
+  show-actuator: false
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
