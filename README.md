@@ -82,7 +82,7 @@ curl -X DELETE http://localhost:8080/api/v1/micetro \
   -H "Content-Type: application/json" \
   -d '{"zone": "example.de.", "name": "test1"}'
 
-curl -X POST http://localhost:8080/api/v1/micetro \
+curl -X DELETE http://localhost:8080/api/v1/micetro \
   -H "Authorization: Bearer XYZ" \
   -H "Content-Type: application/json" \
   -d '{"zone": "example.de.", "name": "test2.dev.example.de"}'
