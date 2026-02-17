@@ -1,0 +1,83 @@
+services:
+  # -------------------------------------------------------
+  # 1. TRAEFIK
+  # -------------------------------------------------------
+  traefik:
+    build: . 
+    container_name: traefik-${TRAEFIK_PROFILE} # Guter Praxis: Name unique machen
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - webnet
+    ports:
+      # ACHTUNG: Wenn mehrere Traefiks auf dem gleichen Host laufen,
+      # können nicht alle Port 80/443 binden!
+      # Entweder hat jeder Traefik eine eigene IP (macvlan) 
+      # oder Sie nutzen hier andere Ports (z.B. 8081:80).
+      # Hier als Beispiel Standard-Ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - EXEC_PATH=/usr/local/bin/dns-hook.sh
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}
+      - TRAEFIK_PROFILE=${TRAEFIK_PROFILE} # Profil auch als ENV verfügbar machen
+      - EXEC_POLLING_INTERVAL=10
+      - EXEC_PROPAGATION_TIMEOUT=120
+      - LEGO_DISABLE_CNAME_SUPPORT=false
+      - LEGO_EXPERIMENTAL_DNS_RESOLVERS=8.8.8.8:53
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      
+      # --- WICHTIG: CONSTRAINT ---
+      # Traefik ignoriert alle Container, die dieses Label NICHT haben.
+      - "--providers.docker.constraints=Label(`traefik.profile`, `${TRAEFIK_PROFILE}`)"
+      
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=exec"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=10"
+      - "--certificatesresolvers.myresolver.acme.email=admin@example.de"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=8.8.8.8:53,1.1.1.1:53"
+
+      # STAGING (Entfernen für Produktion):
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+  # -------------------------------------------------------
+  # 2. APP (Nginx)
+  # -------------------------------------------------------
+  webapp:
+    image: nginx:alpine
+    container_name: webapp-${TRAEFIK_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+    labels:
+      - "traefik.enable=true"
+      
+      # --- WICHTIG: ZUWEISUNG ZUM PROFIL ---
+      # Ohne dieses Label würde Traefik diesen Container ignorieren!
+      - "traefik.profile=${TRAEFIK_PROFILE}"
+      
+      # Router Konfiguration
+      - "traefik.http.routers.webapp.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.webapp.entrypoints=websecure"
+      - "traefik.http.routers.webapp.tls.certresolver=myresolver"
+      - "traefik.http.services.webapp.loadbalancer.server.port=80"
+
+networks:
+  webnet:
+    driver: bridge

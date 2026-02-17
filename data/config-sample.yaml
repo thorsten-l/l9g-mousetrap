@@ -11,7 +11,7 @@ springdoc:
     enabled: true
 
 micetro:
-  api-url: "https://ipam.sonia.de/mmws/api/v2/JSON"
+  api-url: "https://mm.example.de/mmws/api/v2/JSON"
   server: "localhost"
   login-name: "apiuser"
   password: "apipassword"
