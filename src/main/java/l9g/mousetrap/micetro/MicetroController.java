@@ -57,6 +57,11 @@ public class MicetroController
   {
     if(zone != null && name != null)
     {
+      if ( name.endsWith("."))
+      {
+        name = name.substring(0,name.length()-1);
+      }
+      
       if(name.endsWith(zone.substring(0, zone.length() - 1)))
       {
         name = name.substring(0, name.length() - zone.length());
@@ -80,6 +85,8 @@ public class MicetroController
     String zone = normalizeZone(request.get("zone"));
     String name = normalizeName(zone, request.get("name"));
 
+    log.debug("zone= '{}', name='{}'", zone, name);
+    
     if(zone == null || name == null)
     {
       return ResponseEntity.badRequest().build();
@@ -99,6 +106,8 @@ public class MicetroController
     String zone = normalizeZone(request.get("zone"));
     String name = normalizeName(zone, request.get("name"));
 
+    log.debug("zone= '{}', name='{}'", zone, name);
+    
     if(zone == null || name == null)
     {
       return ResponseEntity.badRequest().build();
