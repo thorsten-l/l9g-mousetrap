@@ -38,26 +38,6 @@ mvn clean package
 
 This will create a JAR file in the `target/` directory: `l9g-mousetrap.jar`.
 
-### Running with Docker
-
-The most convenient way to run the application is using Docker and Docker Compose.
-
-1.  **Build the Docker image:**
-    A `Dockerfile` is provided in the `docker/` directory. You can build the image with the following command from the project root:
-
-    ```bash
-    docker build -t l9g-mousetrap:latest -f docker/Dockerfile .
-    ```
-
-2.  **Run with Docker Compose:**
-    The `docker-compose.yaml` file in the `docker/` directory can be used to run the application. Note that the service name and image in the provided `docker-compose.yaml` might be incorrect (`l9g-uidgen`). You may need to edit it to use the correct image name (`l9g-mousetrap`).
-
-    Assuming you have a `data/config.yaml` file with the necessary configuration, you can start the service with:
-
-    ```bash
-    docker-compose -f docker/docker-compose.yaml up -d
-    ```
-
 ### Running Locally
 
 You can also run the application directly from the command line:
