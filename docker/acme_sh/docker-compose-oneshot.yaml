@@ -1,0 +1,14 @@
+services:
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+      # IMPORTANT: mount Docker Socket so acme.sh can reload the webserver
+      # - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}

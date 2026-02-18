@@ -4,18 +4,18 @@ services:
   # -------------------------------------------------------
   traefik:
     build: . 
-    container_name: traefik-${TRAEFIK_PROFILE} # Guter Praxis: Name unique machen
+    container_name: traefik-${TRAEFIK_PROFILE} # Good practice: make name unique
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     networks:
       - webnet
     ports:
-      # ACHTUNG: Wenn mehrere Traefiks auf dem gleichen Host laufen,
-      # können nicht alle Port 80/443 binden!
-      # Entweder hat jeder Traefik eine eigene IP (macvlan) 
-      # oder Sie nutzen hier andere Ports (z.B. 8081:80).
-      # Hier als Beispiel Standard-Ports:
+      # NOTE: If multiple Traefiks run on the same host,
+      # they cannot all bind to port 80/443!
+      # Either each Traefik has its own IP (macvlan)
+      # or you use different ports (e.g., 8081:80).
+      # Using standard ports as an example:
       - "80:80"
       - "443:443"
     environment:
@@ -23,7 +23,7 @@ services:
       - MICETRO_API_URL=${MICETRO_API_URL}
       - MICETRO_TOKEN=${MICETRO_TOKEN}
       - MICETRO_ZONE=${MICETRO_ZONE}
-      - TRAEFIK_PROFILE=${TRAEFIK_PROFILE} # Profil auch als ENV verfügbar machen
+      - TRAEFIK_PROFILE=${TRAEFIK_PROFILE} # Make profile available as ENV
       - EXEC_POLLING_INTERVAL=10
       - EXEC_PROPAGATION_TIMEOUT=120
       - LEGO_DISABLE_CNAME_SUPPORT=false
@@ -37,8 +37,8 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       
-      # --- WICHTIG: CONSTRAINT ---
-      # Traefik ignoriert alle Container, die dieses Label NICHT haben.
+      # --- IMPORTANT: CONSTRAINT ---
+      # Traefik ignores all containers that do NOT have this label.
       - "--providers.docker.constraints=Label(`traefik.profile`, `${TRAEFIK_PROFILE}`)"
       
       - "--entrypoints.web.address=:80"
@@ -53,7 +53,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=8.8.8.8:53,1.1.1.1:53"
 
-      # STAGING (Entfernen für Produktion):
+      # STAGING (Remove for production):
       - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
 
   # -------------------------------------------------------
@@ -68,11 +68,11 @@ services:
     labels:
       - "traefik.enable=true"
       
-      # --- WICHTIG: ZUWEISUNG ZUM PROFIL ---
-      # Ohne dieses Label würde Traefik diesen Container ignorieren!
+      # --- IMPORTANT: PROFILE ASSIGNMENT ---
+      # Without this label, Traefik would ignore this container!
       - "traefik.profile=${TRAEFIK_PROFILE}"
       
-      # Router Konfiguration
+      # Router configuration
       - "traefik.http.routers.webapp.rule=Host(`${APP_DOMAIN}`)"
       - "traefik.http.routers.webapp.entrypoints=websecure"
       - "traefik.http.routers.webapp.tls.certresolver=myresolver"

@@ -1,0 +1,13 @@
+services:
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme
+    command: daemon
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+    environment:
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}

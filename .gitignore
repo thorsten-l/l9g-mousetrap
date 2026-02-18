@@ -16,3 +16,4 @@ secrets
 secret.bin
 .env
 letsencrypt/
+certs/

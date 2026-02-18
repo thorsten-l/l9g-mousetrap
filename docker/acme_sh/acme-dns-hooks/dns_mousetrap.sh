@@ -12,8 +12,8 @@ dns_mousetrap_add() {
   
   _info "Mousetrap: Adding record for $fulldomain"
 
-  # Simples Entfernen der Zone vom FQDN
-  # Wir verlassen uns darauf, dass MICETRO_ZONE korrekt in der .env steht
+  # Simple removal of the zone from the FQDN
+  # We rely on MICETRO_ZONE being correctly set in the .env
   name="${fulldomain%.$MICETRO_ZONE}"
 
   # API Call
