@@ -5,12 +5,14 @@ target/
 *.log.*
 *.tmp
 *.bak
+*.jar
+*.class
+*.war
+*.ear
 config.yaml
 server.p12
 nb-configuration.xml
 nbactions.xml
-l9g-oidc-info.jar
-l9g-accountinfo.jar
 GEMINI.md
 secrets
 secret.bin
