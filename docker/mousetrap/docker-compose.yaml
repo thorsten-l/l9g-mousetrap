@@ -1,0 +1,15 @@
+services:
+ 
+  l9g-mousetrap:
+    image: bellsoft/liberica-openjdk-alpine:21
+    container_name: l9g-mousetrap
+    hostname: mousetrap.sonia.de
+    restart: unless-stopped
+    command: ["java", "-jar", "/l9g-mousetrap.jar"]
+    volumes:
+      - ./data:/data
+      - ./l9g-mousetrap.jar:/l9g-mousetrap.jar
+    environment:
+      - TZ=Europe/Berlin
+    ports:
+      - "8080:8080"
