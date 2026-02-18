@@ -203,7 +203,7 @@ public class MicetroService
   public void addTxtRecords(
     BearerToken token, String zone, String name, String data)
   {
-    log.info("ADD: zone={}, name={}", zone, name);
+    log.debug("ADD: zone={}, name={}", zone, name);
     if(zonePermitted(token, zone))
     {
       String session = login();
@@ -220,7 +220,7 @@ public class MicetroService
   public void removeTxtRecords(
     BearerToken token, String zone, String name)
   {
-    log.info("REMOVE: zone={}, name={}", zone, name);
+    log.debug("REMOVE: zone={}, name={}", zone, name);
 
     if(zonePermitted(token, zone))
     {

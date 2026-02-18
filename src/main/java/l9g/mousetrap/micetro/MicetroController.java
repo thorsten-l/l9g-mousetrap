@@ -16,6 +16,8 @@
 package l9g.mousetrap.micetro;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.Map;
 import l9g.mousetrap.token.AuthenticatedBearerToken;
 import l9g.mousetrap.token.BearerTokenConfig.BearerToken;
@@ -57,11 +59,11 @@ public class MicetroController
   {
     if(zone != null && name != null)
     {
-      if ( name.endsWith("."))
+      if(name.endsWith("."))
       {
-        name = name.substring(0,name.length()-1);
+        name = name.substring(0, name.length() - 1);
       }
-      
+
       if(name.endsWith(zone.substring(0, zone.length() - 1)))
       {
         name = name.substring(0, name.length() - zone.length());
@@ -77,27 +79,33 @@ public class MicetroController
 
   @PostMapping
   public ResponseEntity<String> add(@RequestBody Map<String, String> request,
+    HttpServletRequest servletRequest,
     @Parameter(hidden = true) @AuthenticatedBearerToken BearerToken token)
   {
-    log.trace("Bearer Token = {}", token);
-    log.debug("request = {}", request);
-
     String zone = normalizeZone(request.get("zone"));
     String name = normalizeName(zone, request.get("name"));
 
-    log.debug("zone= '{}', name='{}'", zone, name);
-    
+    if(log.isDebugEnabled())
+    {
+      log.trace("Bearer Token = {}", token);
+      log.debug("request = {}", request);
+      log.debug("zone= '{}', name='{}'", zone, name);
+    }
+
     if(zone == null || name == null)
     {
       return ResponseEntity.badRequest().build();
     }
 
+    log.info("ADD: zone={}, name={}, owner={}, ip={}",
+      zone, name, token.getOwner(), servletRequest.getRemoteAddr());
     service.addTxtRecords(token, zone, name, request.get("data"));
     return ResponseEntity.ok("OK\n");
   }
 
   @DeleteMapping
   public ResponseEntity<String> remove(@RequestBody Map<String, String> request,
+    HttpServletRequest servletRequest,
     @Parameter(hidden = true) @AuthenticatedBearerToken BearerToken token)
   {
     log.trace("Bearer Token = {}", token);
@@ -107,12 +115,14 @@ public class MicetroController
     String name = normalizeName(zone, request.get("name"));
 
     log.debug("zone= '{}', name='{}'", zone, name);
-    
+
     if(zone == null || name == null)
     {
       return ResponseEntity.badRequest().build();
     }
 
+    log.info("REMOVE: zone={}, name={}, owner={}, ip={}",
+      zone, name, token.getOwner(), servletRequest.getRemoteAddr());
     service.removeTxtRecords(token, zone, name);
     return ResponseEntity.ok("OK\n");
   }
