@@ -12,7 +12,7 @@
   
   <groupId>l9g.webapp</groupId>
   <artifactId>l9g-mousetrap</artifactId>
-  <version>0.0.1</version>
+  <version>0.1.2</version>
   <name>L9G Mousetrap DNS-01</name>
   
   <description>DNS-01 Helper Service for Micetro JSONRPC</description>
