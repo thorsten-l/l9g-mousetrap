@@ -11,12 +11,9 @@ services:
       - ./l9g-mousetrap.jar:/l9g-mousetrap.jar:ro
     environment:
       - TZ=Europe/Berlin
-    ports:
-      - "8080:8080"
-      - "9000:9000"
     healthcheck:
-      test: ["CMD", "wget", "-O-", "http://localhost:9000/actuator/health"]
-      start_period: 10s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/actuator/health | grep UP || exit 1"]
+      start_period: 20s
       start_interval: 5s
       interval: 30s
       timeout: 10s
@@ -63,12 +60,13 @@ services:
       - LEGO_DISABLE_CNAME_SUPPORT=false
       - LEGO_EXPERIMENTAL_DNS_RESOLVERS=8.8.8.8:53
     volumes:
-      - ./letsencrypt:/letsencrypt
+      - ./acme:/acme:rw
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # - ./dns-hook.sh:/usr/local/bin/dns-hook.sh:ro
     command:
       - "--log.level=INFO"
       - "--api.insecure=true"
+      - "--ping=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       
@@ -84,10 +82,16 @@ services:
       - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=exec"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=10"
-      - "--certificatesresolvers.myresolver.acme.email=admin@example.de"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.email=${APP_ADMIN_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/acme/acme.json"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=8.8.8.8:53,1.1.1.1:53"
 
       # STAGING (Remove for production):
       - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 

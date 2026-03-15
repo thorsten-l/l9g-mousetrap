@@ -19,3 +19,4 @@ secret.bin
 .env
 letsencrypt/
 certs/
+acme/
