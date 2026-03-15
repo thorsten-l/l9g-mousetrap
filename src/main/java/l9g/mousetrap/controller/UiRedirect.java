@@ -37,7 +37,7 @@ public class UiRedirect
    *
    * @return A {@link ResponseEntity} that performs a PERMANENT_REDIRECT.
    */
-  @GetMapping("/api/docs")
+  @GetMapping( path = {"/", "/api/docs"})
   public ResponseEntity redirect()
   {
     return ResponseEntity

@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration;
     )
   ),
   servers = {
-    @Server(url = "https://cardinfo.api.sonia.de", description = "Production"),
+    @Server(url = "https://mousetrap.sonia.de", description = "Production"),
     @Server(url = "http://localhost:8080", description = "Local Development")
   }
 )

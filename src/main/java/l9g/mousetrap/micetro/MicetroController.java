@@ -17,7 +17,6 @@ package l9g.mousetrap.micetro;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.Map;
 import l9g.mousetrap.token.AuthenticatedBearerToken;
 import l9g.mousetrap.token.BearerTokenConfig.BearerToken;

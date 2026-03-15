@@ -1,0 +1,30 @@
+
+logging:
+  level:
+    root: ERROR
+    l9g: INFO
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+micetro:
+  api-url: "https://mm.example.de/mmws/api/v2/JSON"
+  server: "localhost"
+  login-name: "apiuser"
+  password: "apipassword"
+  unauthorized-as-forbidden: true
+  session-cache-ttl: 245
+
+bearer-tokens:
+  map:
+    development-token1:
+      token: "development-token1-value"
+      owner: ich
+      description: Mein eigener Bearer Authorization Token.
+      permitted-zones: 
+        - example.de.
+        - example.com.
+      enabled: true

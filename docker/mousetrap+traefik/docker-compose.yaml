@@ -1,0 +1,93 @@
+services:
+ 
+  l9g-mousetrap:
+    image: bellsoft/liberica-openjdk-alpine:21
+    container_name: l9g-mousetrap-${TRAEFIK_PROFILE}
+    hostname: mousetrap.sonia.de
+    restart: unless-stopped
+    command: ["java", "-jar", "/l9g-mousetrap.jar"]
+    volumes:
+      - ./data:/data:ro
+      - ./l9g-mousetrap.jar:/l9g-mousetrap.jar:ro
+    environment:
+      - TZ=Europe/Berlin
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "wget", "-O-", "http://localhost:9000/actuator/health"]
+      start_period: 10s
+      start_interval: 5s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      
+      # --- IMPORTANT: PROFILE ASSIGNMENT ---
+      # Without this label, Traefik would ignore this container!
+      - "traefik.profile=${TRAEFIK_PROFILE}"
+      
+      # Router configuration
+      - "traefik.http.routers.l9g-mousetrap.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.l9g-mousetrap.entrypoints=websecure"
+      - "traefik.http.routers.l9g-mousetrap.tls.certresolver=myresolver"
+      - "traefik.http.services.l9g-mousetrap.loadbalancer.server.port=8080"
+
+  traefik:
+    # image: traefik:v3.6
+    build: ./traefik
+    container_name: traefik-${TRAEFIK_PROFILE} # Good practice: make name unique
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      l9g-mousetrap:
+        condition: service_healthy
+    ports:
+      # NOTE: If multiple Traefiks run on the same host,
+      # they cannot all bind to port 80/443!
+      # Either each Traefik has its own IP (macvlan)
+      # or you use different ports (e.g., 8081:80).
+      # Using standard ports as an example:
+      - "80:80"
+      - "443:443"
+    environment:
+      - EXEC_PATH=/usr/local/bin/dns-hook.sh
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}
+      - TRAEFIK_PROFILE=${TRAEFIK_PROFILE} # Make profile available as ENV
+      - EXEC_POLLING_INTERVAL=10
+      - EXEC_PROPAGATION_TIMEOUT=120
+      - LEGO_DISABLE_CNAME_SUPPORT=false
+      - LEGO_EXPERIMENTAL_DNS_RESOLVERS=8.8.8.8:53
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./dns-hook.sh:/usr/local/bin/dns-hook.sh:ro
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      
+      # --- IMPORTANT: CONSTRAINT ---
+      # Traefik ignores all containers that do NOT have this label.
+      - "--providers.docker.constraints=Label(`traefik.profile`, `${TRAEFIK_PROFILE}`)"
+      
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=exec"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=10"
+      - "--certificatesresolvers.myresolver.acme.email=admin@example.de"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=8.8.8.8:53,1.1.1.1:53"
+
+      # STAGING (Remove for production):
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+

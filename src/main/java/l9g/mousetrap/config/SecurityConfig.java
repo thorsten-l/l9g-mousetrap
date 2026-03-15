@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
@@ -149,7 +148,7 @@ public class SecurityConfig
 
       String auth = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-      log.debug("auth = {}", auth);
+      log.trace("auth = {}", auth);
       
       if(auth == null ||  ! auth.startsWith("Bearer "))
       {
