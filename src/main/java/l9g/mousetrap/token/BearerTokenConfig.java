@@ -51,6 +51,8 @@ public class BearerTokenConfig
     private String description;
         
     private List<String> permittedZones;
+    
+    private List<String> permittedFqdns;
 
     private boolean enabled = false;
   }

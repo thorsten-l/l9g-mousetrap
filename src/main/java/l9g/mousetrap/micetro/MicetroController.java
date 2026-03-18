@@ -17,11 +17,14 @@ package l9g.mousetrap.micetro;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 import l9g.mousetrap.token.AuthenticatedBearerToken;
 import l9g.mousetrap.token.BearerTokenConfig.BearerToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,18 +45,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class MicetroController
 {
   private final MicetroService service;
-
+  
   private String normalizeZone(String zone)
   {
     if(zone != null &&  ! zone.endsWith("."))
     {
       zone = zone + ".";
     }
-
+    
     log.debug("zone = '{}'", zone);
     return zone;
   }
-
+  
   private String normalizeName(String zone, String name)
   {
     if(zone != null && name != null)
@@ -62,7 +65,7 @@ public class MicetroController
       {
         name = name.substring(0, name.length() - 1);
       }
-
+      
       if(name.endsWith(zone.substring(0, zone.length() - 1)))
       {
         name = name.substring(0, name.length() - zone.length());
@@ -75,7 +78,30 @@ public class MicetroController
     log.debug("name = '{}'", name);
     return name;
   }
-
+  
+  private boolean checkFqdn(BearerToken token, String zone, String name)
+  {
+    List<String> permittedFqdns = token.getPermittedFqdns();
+    
+    if(permittedFqdns == null || permittedFqdns.isEmpty())
+    {
+      return true;
+    }
+    
+    boolean permitted = false;
+    String fqdn = name + "." + zone;
+    for(String permittedFqdn : permittedFqdns)
+    {
+      if(permittedFqdn.equalsIgnoreCase(fqdn))
+      {
+        permitted = true;
+        break;
+      }
+    }
+    return permitted;
+    
+  }
+  
   @PostMapping
   public ResponseEntity<String> add(@RequestBody Map<String, String> request,
     HttpServletRequest servletRequest,
@@ -83,25 +109,32 @@ public class MicetroController
   {
     String zone = normalizeZone(request.get("zone"));
     String name = normalizeName(zone, request.get("name"));
-
+    
     if(log.isDebugEnabled())
     {
       log.trace("Bearer Token = {}", token);
       log.debug("request = {}", request);
       log.debug("zone= '{}', name='{}'", zone, name);
     }
-
+    
     if(zone == null || name == null || token.isEnabled() == false)
     {
       return ResponseEntity.badRequest().build();
     }
-
+    
+    if( ! checkFqdn(token, zone, name))
+    {
+      log.warn("FORBIDDEN ADD: zone={}, name={}, owner={}, ip={}",
+        zone, name, token.getOwner(), servletRequest.getRemoteAddr());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    
     log.info("ADD: zone={}, name={}, owner={}, ip={}",
       zone, name, token.getOwner(), servletRequest.getRemoteAddr());
     service.addTxtRecords(token, zone, name, request.get("data"));
     return ResponseEntity.ok("OK\n");
   }
-
+  
   @DeleteMapping
   public ResponseEntity<String> remove(@RequestBody Map<String, String> request,
     HttpServletRequest servletRequest,
@@ -109,21 +142,28 @@ public class MicetroController
   {
     log.trace("Bearer Token = {}", token);
     log.debug("request = {}", request);
-
+    
     String zone = normalizeZone(request.get("zone"));
     String name = normalizeName(zone, request.get("name"));
-
+    
     log.debug("zone= '{}', name='{}'", zone, name);
-
+    
     if(zone == null || name == null || token.isEnabled() == false)
     {
       return ResponseEntity.badRequest().build();
     }
-
+    
+    if( ! checkFqdn(token, zone, name))
+    {
+      log.warn("FORBIDDEN REMOVE: zone={}, name={}, owner={}, ip={}",
+        zone, name, token.getOwner(), servletRequest.getRemoteAddr());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+    
     log.info("REMOVE: zone={}, name={}, owner={}, ip={}",
       zone, name, token.getOwner(), servletRequest.getRemoteAddr());
     service.removeTxtRecords(token, zone, name);
     return ResponseEntity.ok("OK\n");
   }
-
+  
 }
