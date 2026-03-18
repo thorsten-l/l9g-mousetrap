@@ -28,3 +28,14 @@ bearer-tokens:
         - example.de.
         - example.com.
       enabled: true
+    development-token2:
+      token: "development-token2-value"
+      owner: auch ich
+      description: Mein zweiter Bearer Authorization Token.
+      permitted-zones: 
+        - example.de.
+        - example.com.
+      permitted-fqdns:
+        - _acme-challenge.www.example.de.
+        - _acme-challenge.www.example.com.
+      enabled: true
