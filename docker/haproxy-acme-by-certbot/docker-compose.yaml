@@ -1,0 +1,47 @@
+services:
+  haproxy:
+    image: haproxy:3.2-alpine
+    container_name: haproxy-${HAPROXY_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "40080:80"
+      - "40443:443"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/haproxy/certs
+      - ./run:/run/haproxy
+    depends_on:
+      - webapp
+
+  certbot:
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot
+    container_name: certbot-${HAPROXY_PROFILE}
+    restart: "no"
+    networks:
+      - webnet
+    entrypoint: ["certbot"]
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}
+    volumes:
+      - ./certbot-data:/etc/letsencrypt
+      - ./certs:/certs
+      - ./certbot-hooks:/hooks
+
+  webapp:
+    image: nginx:alpine
+    container_name: webapp-${HAPROXY_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

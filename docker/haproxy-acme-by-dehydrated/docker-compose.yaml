@@ -1,0 +1,50 @@
+services:
+    haproxy:
+        image: haproxy:3.2-alpine
+        container_name: haproxy-${HAPROXY_PROFILE}
+        restart: unless-stopped
+        networks:
+            - webnet
+        ports:
+            - "40080:80"
+            - "40443:443"
+        volumes:
+            - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+            - ./certs:/etc/haproxy/certs
+            - ./run:/run/haproxy
+        depends_on:
+            - webapp
+
+    dehydrated:
+        image: alpine:3.20
+        container_name: dehydrated-${HAPROXY_PROFILE}
+        restart: "no"
+        networks:
+            - webnet
+        environment:
+            - APP_DOMAIN=${APP_DOMAIN}
+            - ACME_EMAIL=${ACME_EMAIL}
+            - MICETRO_API_URL=${MICETRO_API_URL}
+            - MICETRO_TOKEN=${MICETRO_TOKEN}
+            - MICETRO_ZONE=${MICETRO_ZONE}
+        volumes:
+            - ./dehydrated:/dehydrated
+            - ./dehydrated-data:/data
+            - ./certs:/certs
+            - ./dns-hook.sh:/hooks/dns-hook.sh
+            - ./domains.txt:/domains.txt
+            - ./dehydrated-wrapper.sh:/dehydrated-wrapper.sh
+        entrypoint:
+            - /bin/sh
+            - /dehydrated-wrapper.sh
+
+    webapp:
+        image: nginx:alpine
+        container_name: webapp-${HAPROXY_PROFILE}
+        restart: unless-stopped
+        networks:
+            - webnet
+
+networks:
+    webnet:
+        driver: bridge

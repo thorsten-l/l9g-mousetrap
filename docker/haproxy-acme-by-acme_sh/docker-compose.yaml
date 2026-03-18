@@ -1,0 +1,51 @@
+services:
+  haproxy:
+    image: haproxy:3.2-alpine
+    container_name: haproxy-${HAPROXY_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "40080:80"
+      - "40443:443"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/haproxy/certs
+      - ./run:/run/haproxy
+    depends_on:
+      - webapp
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme-${HAPROXY_PROFILE}
+    restart: "no"
+    networks:
+      - webnet
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - MICETRO_API_URL=${MICETRO_API_URL}
+      - MICETRO_TOKEN=${MICETRO_TOKEN}
+      - MICETRO_ZONE=${MICETRO_ZONE}
+    entrypoint:
+      - /bin/sh
+      - -c
+    command: >
+      "acme.sh --renew
+      -d \"$APP_DOMAIN\"
+      --server letsencrypt_test
+      --dns dns_mousetrap
+      --debug 2"
+
+  webapp:
+    image: nginx:alpine
+    container_name: webapp-${HAPROXY_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge
