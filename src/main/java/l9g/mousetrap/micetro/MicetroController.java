@@ -91,7 +91,7 @@ public class MicetroController
       log.debug("zone= '{}', name='{}'", zone, name);
     }
 
-    if(zone == null || name == null)
+    if(zone == null || name == null || token.isEnabled() == false)
     {
       return ResponseEntity.badRequest().build();
     }
@@ -115,7 +115,7 @@ public class MicetroController
 
     log.debug("zone= '{}', name='{}'", zone, name);
 
-    if(zone == null || name == null)
+    if(zone == null || name == null || token.isEnabled() == false)
     {
       return ResponseEntity.badRequest().build();
     }

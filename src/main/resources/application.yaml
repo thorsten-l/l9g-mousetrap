@@ -24,6 +24,7 @@ server:
     context-path: /
     session:
       timeout: 9h
+  forward-headers-strategy: native
 
 management:
   server:
