@@ -2,9 +2,9 @@
 
 # Hook script for l9g-mousetrap
 # Env vars required:
-# - MICETRO_API_URL
-# - MICETRO_TOKEN
-# - MICETRO_ZONE
+# - MOUSETRAP_API_URL
+# - MOUSETRAP_TOKEN
+# - MOUSETRAP_ZONE
 
 dns_mousetrap_add() {
   fulldomain=$1
@@ -13,15 +13,15 @@ dns_mousetrap_add() {
   _info "Mousetrap: Adding record for $fulldomain"
 
   # Simple removal of the zone from the FQDN
-  # We rely on MICETRO_ZONE being correctly set in the .env
-  name="${fulldomain%.$MICETRO_ZONE}"
+  # We rely on MOUSETRAP_ZONE being correctly set in the .env
+  name="${fulldomain%.$MOUSETRAP_ZONE}"
 
   # API Call
-  response=$(curl -s -X POST "$MICETRO_API_URL" \
-    -H "Authorization: Bearer $MICETRO_TOKEN" \
+  response=$(curl -s -X POST "$MOUSETRAP_API_URL" \
+    -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{
-      \"zone\": \"$MICETRO_ZONE\", 
+      \"zone\": \"$MOUSETRAP_ZONE\", 
       \"name\": \"$name\", 
       \"data\": \"$txtvalue\"
     }")
@@ -40,13 +40,13 @@ dns_mousetrap_rm() {
   
   _info "Mousetrap: Removing record for $fulldomain"
 
-  name="${fulldomain%.$MICETRO_ZONE}"
+  name="${fulldomain%.$MOUSETRAP_ZONE}"
 
-  curl -s -X DELETE "$MICETRO_API_URL" \
-    -H "Authorization: Bearer $MICETRO_TOKEN" \
+  curl -s -X DELETE "$MOUSETRAP_API_URL" \
+    -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{
-      \"zone\": \"$MICETRO_ZONE\", 
+      \"zone\": \"$MOUSETRAP_ZONE\", 
       \"name\": \"$name\", 
       \"data\": \"$txtvalue\"
     }"

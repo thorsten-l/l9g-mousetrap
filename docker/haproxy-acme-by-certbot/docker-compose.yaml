@@ -11,7 +11,6 @@ services:
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./certs:/etc/haproxy/certs
-      - ./run:/run/haproxy
     depends_on:
       - webapp
 
@@ -23,13 +22,14 @@ services:
     restart: "no"
     networks:
       - webnet
-    entrypoint: ["certbot"]
+    # Exit 0 if no arguments, otherwise run certbot with arguments
+    entrypoint: ["/bin/sh", "-c", "if [ $# -eq 0 ]; then exit 0; fi; exec certbot \"$@\"", "sh"]
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
       - ACME_EMAIL=${ACME_EMAIL}
-      - MICETRO_API_URL=${MICETRO_API_URL}
-      - MICETRO_TOKEN=${MICETRO_TOKEN}
-      - MICETRO_ZONE=${MICETRO_ZONE}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}
     volumes:
       - ./certbot-data:/etc/letsencrypt
       - ./certs:/certs

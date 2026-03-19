@@ -2,8 +2,8 @@
 
 set -eu
 
-if [ -z "${MICETRO_ZONE:-}" ] || [ -z "${MICETRO_TOKEN:-}" ] || [ -z "${MICETRO_API_URL:-}" ]; then
-    echo "Error: MICETRO_ZONE, MICETRO_TOKEN or MICETRO_API_URL environment variable is missing." >&2
+if [ -z "${MOUSETRAP_ZONE:-}" ] || [ -z "${MOUSETRAP_TOKEN:-}" ] || [ -z "${MOUSETRAP_API_URL:-}" ]; then
+    echo "Error: MOUSETRAP_ZONE, MOUSETRAP_TOKEN or MOUSETRAP_API_URL environment variable is missing." >&2
     exit 1
 fi
 
@@ -26,10 +26,10 @@ case "$ACTION" in
 
         echo "dns-hook: deploy_challenge domain=$DOMAIN fqdn=$FQDN" >&2
 
-        curl -fsS -X POST "$MICETRO_API_URL" \
-            -H "Authorization: Bearer $MICETRO_TOKEN" \
+        curl -fsS -X POST "$MOUSETRAP_API_URL" \
+            -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"zone\": \"$MICETRO_ZONE\", \"name\": \"$FQDN\", \"data\": \"$TOKEN_VALUE\"}"
+            -d "{\"zone\": \"$MOUSETRAP_ZONE\", \"name\": \"$FQDN\", \"data\": \"$TOKEN_VALUE\"}"
 
         sleep 30
         ;;
@@ -50,10 +50,10 @@ case "$ACTION" in
 
         echo "dns-hook: clean_challenge domain=$DOMAIN fqdn=$FQDN" >&2
 
-        curl -fsS -X DELETE "$MICETRO_API_URL" \
-            -H "Authorization: Bearer $MICETRO_TOKEN" \
+        curl -fsS -X DELETE "$MOUSETRAP_API_URL" \
+            -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"zone\": \"$MICETRO_ZONE\", \"name\": \"$FQDN\"}"
+            -d "{\"zone\": \"$MOUSETRAP_ZONE\", \"name\": \"$FQDN\"}"
         ;;
 
     deploy_cert)

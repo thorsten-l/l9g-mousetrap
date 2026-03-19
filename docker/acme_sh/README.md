@@ -24,9 +24,9 @@ The setup utilizes a custom DNS hook (`dns_mousetrap.sh`) that communicates with
     ```
 
 2.  **Edit `.env`**:
-    - `MICETRO_API_URL`: The URL of your Mousetrap service (e.g., `http://mousetrap:8080/api/v1/micetro`).
-    - `MICETRO_TOKEN`: Your Mousetrap authentication token.
-    - `MICETRO_ZONE`: The DNS zone where the challenge record should be created (e.g., `example.com`).
+    - `MOUSETRAP_API_URL`: The URL of your Mousetrap service (e.g., `http://mousetrap:8080/api/v1/micetro`).
+    - `MOUSETRAP_TOKEN`: Your Mousetrap authentication token.
+    - `MOUSETRAP_ZONE`: The DNS zone where the challenge record should be created (e.g., `example.com`).
     - `APP_DOMAIN`: The domain name you are requesting a certificate for.
 
 ## Usage Modes

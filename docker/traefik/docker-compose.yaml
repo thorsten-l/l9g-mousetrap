@@ -20,9 +20,9 @@ services:
       - "443:443"
     environment:
       - EXEC_PATH=/usr/local/bin/dns-hook.sh
-      - MICETRO_API_URL=${MICETRO_API_URL}
-      - MICETRO_TOKEN=${MICETRO_TOKEN}
-      - MICETRO_ZONE=${MICETRO_ZONE}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}
       - TRAEFIK_PROFILE=${TRAEFIK_PROFILE} # Make profile available as ENV
       - EXEC_POLLING_INTERVAL=10
       - EXEC_PROPAGATION_TIMEOUT=120

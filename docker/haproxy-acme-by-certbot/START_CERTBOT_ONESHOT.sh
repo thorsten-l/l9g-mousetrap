@@ -7,8 +7,8 @@ set -eu
 docker compose run --rm certbot certonly \
     --manual \
     --preferred-challenges dns \
-    --manual-auth-hook /hooks/micetro-auth.sh \
-    --manual-cleanup-hook /hooks/micetro-cleanup.sh \
+    --manual-auth-hook /hooks/mousetrap-auth.sh \
+    --manual-cleanup-hook /hooks/mousetrap-cleanup.sh \
     --non-interactive \
     --agree-tos \
     --email "$ACME_EMAIL" \

@@ -6,8 +6,8 @@
 # $3 = value (The token for the TXT record)
 
 # Check environment variables
-if [ -z "$MICETRO_ZONE" ] || [ -z "$MICETRO_TOKEN" ] || [ -z "$MICETRO_API_URL" ]; then
-  echo "Error: MICETRO_ZONE, MICETRO_TOKEN or MICETRO_API_URL environment variable is missing."
+if [ -z "$MOUSETRAP_ZONE" ] || [ -z "$MOUSETRAP_TOKEN" ] || [ -z "$MOUSETRAP_API_URL" ]; then
+  echo "Error: MOUSETRAP_ZONE, MOUSETRAP_TOKEN or MOUSETRAP_API_URL environment variable is missing."
   exit 1
 fi
 
@@ -18,15 +18,15 @@ FQDN="$2"
 if [ "$1" = "present" ]; then
     # Create record
     # We pass the zone (for context) and the full name ($FQDN)
-    curl -s -X POST "$MICETRO_API_URL" \
-      -H "Authorization: Bearer $MICETRO_TOKEN" \
+    curl -s -X POST "$MOUSETRAP_API_URL" \
+      -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
       -H "Content-Type: application/json" \
-      -d "{\"zone\": \"$MICETRO_ZONE\", \"name\": \"$FQDN\", \"data\": \"$3\"}"
+      -d "{\"zone\": \"$MOUSETRAP_ZONE\", \"name\": \"$FQDN\", \"data\": \"$3\"}"
 
 elif [ "$1" = "cleanup" ]; then
     # Delete record
-    curl -s -X DELETE "$MICETRO_API_URL" \
-      -H "Authorization: Bearer $MICETRO_TOKEN" \
+    curl -s -X DELETE "$MOUSETRAP_API_URL" \
+      -H "Authorization: Bearer $MOUSETRAP_TOKEN" \
       -H "Content-Type: application/json" \
-      -d "{\"zone\": \"$MICETRO_ZONE\", \"name\": \"$FQDN\"}"
+      -d "{\"zone\": \"$MOUSETRAP_ZONE\", \"name\": \"$FQDN\"}"
 fi

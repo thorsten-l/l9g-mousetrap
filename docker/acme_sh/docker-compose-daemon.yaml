@@ -8,6 +8,6 @@ services:
       - ./certs:/acme.sh
       - ./acme-dns-hooks:/root/.acme.sh/dnsapi
     environment:
-      - MICETRO_API_URL=${MICETRO_API_URL}
-      - MICETRO_TOKEN=${MICETRO_TOKEN}
-      - MICETRO_ZONE=${MICETRO_ZONE}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}

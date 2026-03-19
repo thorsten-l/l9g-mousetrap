@@ -26,9 +26,9 @@ The hook script then sends a REST request to the Mousetrap API to manage the rec
     ```
 
 2.  **Edit `.env`**:
-    - `MICETRO_API_URL`: URL of your Mousetrap service.
-    - `MICETRO_TOKEN`: Your authentication token.
-    - `MICETRO_ZONE`: The target DNS zone.
+    - `MOUSETRAP_API_URL`: URL of your Mousetrap service.
+    - `MOUSETRAP_TOKEN`: Your authentication token.
+    - `MOUSETRAP_ZONE`: The target DNS zone.
     - `APP_DOMAIN`: The domain for your web application.
     - `TRAEFIK_PROFILE`: A unique identifier for this Traefik instance (useful when running multiple instances on one host).
 
