@@ -1,51 +1,77 @@
-# Traefik Integration with Mousetrap DNS-01
+# Traefik + Mousetrap DNS-01
 
-This directory contains the configuration to use [Traefik](https://traefik.io/) with the Mousetrap DNS-01 helper. It leverages Traefik's `exec` DNS provider to automate certificate issuance via Micetro.
+Traefik als Reverse Proxy mit automatischem Zertifikatsmanagement via ACME DNS-01 und Mousetrap.
 
-## Components
+## Konzept
 
-- **Dockerfile**: Builds a custom Traefik image that includes `curl` and the DNS hook script.
-- **dns-hook.sh**: A shell script that bridges Traefik (via Lego) and the Mousetrap API.
-- **docker-compose.yaml**: A complete stack including Traefik and a sample web application (Nginx) configured for automated TLS.
-- **dot.env.sample**: Sample environment variables for configuration.
+Traefik nutzt den `exec`-DNS-Provider von Lego. Bei einer Zertifikatsanfrage ruft Traefik `dns-hook.sh` auf, das die `l9g-mousetrap`-API anspricht, um den `_acme-challenge`-TXT-Record in Micetro zu verwalten.
 
-## How it Works
+```
+Traefik/Lego  →  dns-hook.sh  →  l9g-mousetrap API  →  Micetro DNS
+```
 
-Traefik uses the `exec` provider for the ACME DNS-01 challenge. When a certificate is requested, Traefik calls `/usr/local/bin/dns-hook.sh` with specific arguments:
-1. `present` or `cleanup`: The action to perform.
-2. `fqdn`: The `_acme-challenge` domain.
-3. `value`: The TXT record value.
+## Verzeichnisstruktur
 
-The hook script then sends a REST request to the Mousetrap API to manage the records in Micetro.
+```
+.
+├── Dockerfile                        # traefik:v3.6 + curl + dns-hook.sh
+├── dns-hook.sh                       # Lego-Hook: present/cleanup → Mousetrap API
+├── docker-compose.yaml               # Traefik + webapp (nginx)
+├── dot.env.sample                    # Beispiel-Umgebungsvariablen
+└── letsencrypt/
+    └── acme.json                     # Persistente Zertifikatsspeicherung (chmod 600)
+```
 
-## Configuration
+## Konfiguration
 
-1.  **Prepare Environment**:
-    ```bash
-    cp dot.env.sample .env
-    ```
+```bash
+cp dot.env.sample .env
+```
 
-2.  **Edit `.env`**:
-    - `MOUSETRAP_API_URL`: URL of your Mousetrap service.
-    - `MOUSETRAP_TOKEN`: Your authentication token.
-    - `MOUSETRAP_ZONE`: The target DNS zone.
-    - `APP_DOMAIN`: The domain for your web application.
-    - `TRAEFIK_PROFILE`: A unique identifier for this Traefik instance (useful when running multiple instances on one host).
+| Variable            | Beschreibung                                          |
+|---------------------|-------------------------------------------------------|
+| `MOUSETRAP_API_URL` | URL des Mousetrap-Service                             |
+| `MOUSETRAP_TOKEN`   | Bearer Token (base64-kodiert)                         |
+| `MOUSETRAP_ZONE`    | DNS-Zone mit abschließendem Punkt, z.B. `example.de.` |
+| `APP_DOMAIN`        | Domain der zu schützenden Anwendung                   |
+| `TRAEFIK_PROFILE`   | Eindeutiger Bezeichner dieser Instanz (s.u.)          |
 
-## Profiles and Constraints
+## Profil-Isolation
 
-The `docker-compose.yaml` is configured with **Docker Constraints**. Traefik will only manage containers that have a matching `traefik.profile` label. This allows you to run multiple independent Traefik instances on the same Docker host without them interfering with each other's containers.
+Über `TRAEFIK_PROFILE` können mehrere unabhängige Traefik-Instanzen auf demselben Docker-Host betrieben werden. Traefik ignoriert alle Container ohne passendes Label:
 
-## Usage
+```yaml
+# Traefik-Constraint:
+--providers.docker.constraints=Label(`traefik.profile`, `${TRAEFIK_PROFILE}`)
 
-Start the stack:
+# Container-Label (muss an jedem verwalteten Container gesetzt sein):
+traefik.profile: ${TRAEFIK_PROFILE}
+```
+
+## Nutzung
+
 ```bash
 docker compose up -d
 ```
 
-Traefik will start, detect the `webapp` container, and automatically request a Let's Encrypt certificate using the DNS-01 challenge through Mousetrap.
+Traefik erkennt den `webapp`-Container über Docker-Labels und beantragt automatisch ein Zertifikat für `APP_DOMAIN`.
 
-## Notes
+## Traefik-Image
 
-- **Staging**: By default, the configuration uses the Let's Encrypt **Staging** server. Remove the `--certificatesresolvers.myresolver.acme.caserver` line in `docker-compose.yaml` for production certificates.
-- **Persistence**: Certificates are stored in `./letsencrypt/acme.json`. Ensure this file has appropriate permissions (`600`).
+`Dockerfile` baut ein Custom-Image auf Basis `traefik:v3.6` mit `curl` und eingebettetem `dns-hook.sh`. Das Image wird beim Start automatisch gebaut.
+
+## Hinweis: Staging
+
+Standardmäßig ist der Let's Encrypt **Staging**-Server aktiv. Für Produktionszertifikate diese Zeile in `docker-compose.yaml` entfernen:
+
+```yaml
+- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+```
+
+## acme.json
+
+Die Datei `letsencrypt/acme.json` muss die Berechtigung `600` haben, sonst verweigert Traefik den Start:
+
+```bash
+chmod 600 letsencrypt/acme.json
+```

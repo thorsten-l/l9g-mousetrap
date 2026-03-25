@@ -1,0 +1,27 @@
+services:
+  tomcat:
+    image: tomcat:11-jre21-alpine
+    container_name: tomcat-${TOMCAT_PROFILE}
+    restart: unless-stopped
+    ports:
+      - "40080:8080"
+      - "40443:8443"
+    volumes:
+      - ./server.xml:/usr/local/tomcat/conf/server.xml:ro
+      - ./rewrite.config:/usr/local/tomcat/conf/Catalina/localhost/rewrite.config:ro
+      - ./html:/usr/local/tomcat/webapps/ROOT
+      - ./certs:/usr/local/tomcat/certs
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme-${TOMCAT_PROFILE}
+    restart: "no"
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}
+    command: --renew -d ${APP_DOMAIN} --server letsencrypt_test --dns dns_mousetrap --debug 2

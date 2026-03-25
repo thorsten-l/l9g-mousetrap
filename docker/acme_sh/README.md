@@ -1,65 +1,72 @@
-# Mousetrap DNS-01 Challenge with acme.sh
+# acme.sh + Mousetrap DNS-01
 
-This directory contains configuration and scripts to use [acme.sh](https://github.com/acmesh-official/acme.sh) with the Mousetrap DNS-01 helper for obtaining SSL/TLS certificates via Micetro.
+Standalone [acme.sh](https://github.com/acmesh-official/acme.sh)-Konfiguration zur Zertifikatsausstellung via Mousetrap DNS-01 Hook — ohne gebundenen Webserver.
 
-## Overview
+## Konzept
 
-The setup utilizes a custom DNS hook (`dns_mousetrap.sh`) that communicates with the Mousetrap API to automate the creation and deletion of DNS TXT records required for the ACME DNS-01 challenge.
+acme.sh nutzt den custom DNS-Hook `dns_mousetrap.sh`, der die `l9g-mousetrap`-API aufruft, um `_acme-challenge`-TXT-Records in Micetro zu setzen und zu löschen.
 
-## Directory Structure
+## Verzeichnisstruktur
 
-- `acme-dns-hooks/`: Contains the `dns_mousetrap.sh` script, which is mounted into the container.
-- `certs/`: Persistent storage for issued certificates and account information.
-- `docker-compose-daemon.yaml`: Configuration for running `acme.sh` as a long-running service.
-- `docker-compose-oneshot.yaml`: Configuration for running `acme.sh` as a temporary task.
-- `START_ACME_ONESHOT.sh`: Helper script to issue a certificate using a temporary container.
-- `START_ACME_ON_DAEMON_CONTAINER.sh`: Helper script to issue a certificate using a running daemon container.
+```
+.
+├── acme-dns-hooks/
+│   └── dns_mousetrap.sh              # acme.sh DNS-Hook für Mousetrap API
+├── certs/                            # Zertifikate und acme.sh-State (git-ignored)
+├── dot.env.sample                    # Beispiel-Umgebungsvariablen
+├── docker-compose-daemon.yaml        # acme.sh als Daemon (für automatische Erneuerung)
+├── docker-compose-oneshot.yaml       # acme.sh als einmaliger Task
+├── START_ACME_ONESHOT.sh             # Zertifikat ausstellen (One-Shot)
+├── START_ACME_ON_DAEMON_CONTAINER.sh # Zertifikat ausstellen im laufenden Daemon
+└── FULLTEST_ONESHOT.sh               # Certs löschen und neu ausstellen
+```
 
-## Configuration
-
-1.  **Prepare Environment Variables**:
-    Copy the sample environment file and edit it with your credentials:
-    ```bash
-    cp dot.env.sample .env
-    ```
-
-2.  **Edit `.env`**:
-    - `MOUSETRAP_API_URL`: The URL of your Mousetrap service (e.g., `http://mousetrap:8080/api/v1/micetro`).
-    - `MOUSETRAP_TOKEN`: Your Mousetrap authentication token.
-    - `MOUSETRAP_ZONE`: The DNS zone where the challenge record should be created (e.g., `example.com`).
-    - `APP_DOMAIN`: The domain name you are requesting a certificate for.
-
-## Usage Modes
-
-### 1. One-Shot Mode (Recommended for simple automation)
-
-Runs a container, issues the certificate, and then removes the container.
-
-- **Run command**: `./START_ACME_ONESHOT.sh`
-- **Uses**: `docker-compose-oneshot.yaml`
-
-### 2. Daemon Mode (Recommended for automatic renewals)
-
-Runs `acme.sh` as a background service.
-
-- **Start Daemon**:
-  ```bash
-  docker compose -f docker-compose-daemon.yaml up -d
-  ```
-- **Issue Certificate**: `./START_ACME_ON_DAEMON_CONTAINER.sh`
-- **Uses**: `docker-compose-daemon.yaml`
-
-## Custom DNS Hook Details
-
-The hook script `acme-dns-hooks/dns_mousetrap.sh` implements the `dns_mousetrap_add` and `dns_mousetrap_rm` functions required by `acme.sh`. It automatically calculates the record name by stripping the zone from the full challenge domain and performs the API calls to Mousetrap.
-
-## Manual Issuance Example
-
-To manually trigger an issuance using a running `acme` container:
+## Konfiguration
 
 ```bash
-docker exec acme acme.sh --issue \
-  --server letsencrypt \
-  -d your-domain.com \
-  --dns dns_mousetrap
+cp dot.env.sample .env
 ```
+
+| Variable            | Beschreibung                                          |
+|---------------------|-------------------------------------------------------|
+| `MOUSETRAP_API_URL` | URL des Mousetrap-Service                             |
+| `MOUSETRAP_TOKEN`   | Bearer Token (base64-kodiert)                         |
+| `MOUSETRAP_ZONE`    | DNS-Zone mit abschließendem Punkt, z.B. `example.de.` |
+| `APP_DOMAIN`        | Domain für das Zertifikat                             |
+
+## Betriebsmodi
+
+### One-Shot (empfohlen für einfache Automatisierung)
+
+Startet einen temporären Container, stellt das Zertifikat aus und entfernt den Container:
+
+```bash
+mkdir -p certs
+./START_ACME_ONESHOT.sh
+```
+
+### Daemon (empfohlen für automatische Erneuerung)
+
+Startet acme.sh als dauerhaft laufenden Dienst mit integriertem Renewal-Cron:
+
+```bash
+docker compose -f docker-compose-daemon.yaml up -d
+./START_ACME_ON_DAEMON_CONTAINER.sh
+```
+
+### Volltest
+
+```bash
+./FULLTEST_ONESHOT.sh
+```
+
+## Zertifikate einbinden
+
+Die ausgestellten Zertifikate liegen unter `./certs/<APP_DOMAIN>_ecc/`. Für die Einbindung in einen Webserver siehe die spezifischen Beispiele:
+
+- `../haproxy-acme-by-acme_sh/` — HAProxy (kombiniertes PEM)
+- `../nginx-acme-by-acme_sh/` — nginx (separate key + cert)
+- `../nginx-proxy-acme-by-acme_sh/` — nginx als Reverse Proxy
+- `../apache-httpd-acme-by-acme_sh/` — Apache HTTPD
+- `../apache-httpd-proxy-acme-by-acme_sh/` — Apache HTTPD als Reverse Proxy
+- `../tomcat-acme-by-acme_sh/` — Apache Tomcat

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="8005" shutdown="SHUTDOWN">
+  <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+  <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+  <Service name="Catalina">
+
+    <!-- HTTP — redirectPort tells Tomcat's security-constraint mechanism where HTTPS lives -->
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443" />
+
+    <!-- HTTPS with PEM certificates (Tomcat 8.5+ NIO) -->
+    <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
+               SSLEnabled="true"
+               connectionTimeout="20000">
+      <SSLHostConfig>
+        <Certificate certificateFile="/usr/local/tomcat/certs/site.cer"
+                     certificateKeyFile="/usr/local/tomcat/certs/site.key"
+                     type="RSA" />
+      </SSLHostConfig>
+    </Connector>
+
+    <Engine name="Catalina" defaultHost="localhost">
+
+      <Host name="localhost" appBase="webapps"
+            unpackWARs="true" autoDeploy="true">
+
+        <!-- HTTP → HTTPS redirect via rewrite.config -->
+        <Valve className="org.apache.catalina.valves.rewrite.RewriteValve" />
+
+        <Valve className="org.apache.catalina.valves.AccessLogValve"
+               directory="logs" prefix="localhost_access_log"
+               suffix=".txt" pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+      </Host>
+    </Engine>
+  </Service>
+</Server>

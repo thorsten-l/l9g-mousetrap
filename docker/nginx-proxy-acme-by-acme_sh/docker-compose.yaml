@@ -1,0 +1,43 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-${NGINX_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "40080:80"
+      - "40443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - webapp
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme-${NGINX_PROFILE}
+    restart: "no"
+    networks:
+      - webnet
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}
+    # Using the default entrypoint of neilpang/acme.sh
+    command: --renew -d ${APP_DOMAIN} --server letsencrypt_test --dns dns_mousetrap --debug 2
+
+  webapp:
+    image: nginx:alpine
+    container_name: webapp-${NGINX_PROFILE}
+    restart: unless-stopped
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

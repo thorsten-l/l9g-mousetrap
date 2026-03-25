@@ -49,13 +49,15 @@ Param(
 )
 
 # Berechne den Namen des Eintrags durch Entfernen der Zone vom FQDN
-# Äquivalent zu: name="${fulldomain%.$MICETRO_ZONE}"
+# Äquivalent zu: name="${fulldomain%.$MOUSETRAP_ZONE}"
 $ZoneWithDot = if ($Zone.EndsWith(".")) { $Zone } else { "$Zone." }
-$Name = $FullDomain.Replace(".$Zone", "").Replace($Zone, "")
+$ZoneSuffix  = "." + $ZoneWithDot.TrimEnd(".")
 
-# Wenn am Ende noch ein Punkt übrig ist (bei FQDNs), entfernen
-if ($Name.EndsWith(".")) {
-    $Name = $Name.Substring(0, $Name.Length - 1)
+$NormalizedFqdn = $FullDomain.TrimEnd(".")
+if ($NormalizedFqdn.EndsWith($ZoneSuffix, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $Name = $NormalizedFqdn.Substring(0, $NormalizedFqdn.Length - $ZoneSuffix.Length)
+} else {
+    $Name = $NormalizedFqdn
 }
 
 $Headers = @{

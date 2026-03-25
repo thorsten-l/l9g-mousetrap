@@ -1,0 +1,26 @@
+services:
+  apache:
+    image: httpd:alpine
+    container_name: apache-${APACHE_PROFILE}
+    restart: unless-stopped
+    ports:
+      - "40080:80"
+      - "40443:443"
+    volumes:
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./html:/usr/local/apache2/htdocs:ro
+      - ./certs:/usr/local/apache2/certs
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme-${APACHE_PROFILE}
+    restart: "no"
+    volumes:
+      - ./certs:/acme.sh
+      - ./acme-dns-hooks:/root/.acme.sh/dnsapi
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - MOUSETRAP_API_URL=${MOUSETRAP_API_URL}
+      - MOUSETRAP_TOKEN=${MOUSETRAP_TOKEN}
+      - MOUSETRAP_ZONE=${MOUSETRAP_ZONE}
+    command: --renew -d ${APP_DOMAIN} --server letsencrypt_test --dns dns_mousetrap --debug 2

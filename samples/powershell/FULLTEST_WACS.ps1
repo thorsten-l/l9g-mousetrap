@@ -21,7 +21,7 @@ Get-Content $EnvFile | Where-Object { $_ -match "=" -and $_ -notmatch "^#" } | F
 }
 
 # Überprüfe erforderliche Variablen
-$RequiredVars = @("ENV_MICETRO_API_URL", "ENV_MICETRO_TOKEN", "ENV_MICETRO_ZONE", "ENV_APP_DOMAIN")
+$RequiredVars = @("ENV_MOUSETRAP_API_URL", "ENV_MOUSETRAP_TOKEN", "ENV_MOUSETRAP_ZONE", "ENV_APP_DOMAIN")
 foreach ($var in $RequiredVars) {
     if (-not (Get-Variable $var -ErrorAction SilentlyContinue)) {
         Write-Error "Variable $var fehlt in der .env Datei!"
@@ -40,14 +40,14 @@ $WacsExe = "wacs.exe"
 $WacsArgs = @(
     "--test",
     "--accepttos",
-    "--email", "admin@$($ENV_MICETRO_ZONE.TrimEnd('.'))",
+    "--email", "admin@$($ENV_MOUSETRAP_ZONE.TrimEnd('.'))",
     "--host", "$ENV_APP_DOMAIN",
     "--validationmode", "dns-01",
     "--validation", "script",
     "--dnscreatescript", "$HookScript",
-    "--dnscreatescriptarguments", "-Action Add -FullDomain {RecordName} -TxtValue {Token} -ApiUrl `"$ENV_MICETRO_API_URL`" -Token `"$ENV_MICETRO_TOKEN`" -Zone `"$ENV_MICETRO_ZONE`"",
+    "--dnscreatescriptarguments", "-Action Add -FullDomain {RecordName} -TxtValue {Token} -ApiUrl `"$ENV_MOUSETRAP_API_URL`" -Token `"$ENV_MOUSETRAP_TOKEN`" -Zone `"$ENV_MOUSETRAP_ZONE`"",
     "--dnsdeletescript", "$HookScript",
-    "--dnsdeletescriptarguments", "-Action Remove -FullDomain {RecordName} -TxtValue {Token} -ApiUrl `"$ENV_MICETRO_API_URL`" -Token `"$ENV_MICETRO_TOKEN`" -Zone `"$ENV_MICETRO_ZONE`""
+    "--dnsdeletescriptarguments", "-Action Remove -FullDomain {RecordName} -TxtValue {Token} -ApiUrl `"$ENV_MOUSETRAP_API_URL`" -Token `"$ENV_MOUSETRAP_TOKEN`" -Zone `"$ENV_MOUSETRAP_ZONE`""
 )
 
 Write-Host "Befehl: $WacsExe $($WacsArgs -join ' ')" -ForegroundColor DarkGray

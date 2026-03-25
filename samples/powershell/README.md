@@ -1,39 +1,77 @@
 # Mousetrap DNS-01 PowerShell Samples
 
-Dieses Verzeichnis enthält PowerShell-Beispiele für die Interaktion mit der l9g-mousetrap API.
+PowerShell-Skripte zur Integration von l9g-mousetrap in Windows-ACME-Clients.
+
+## Verzeichnisstruktur
+
+```
+.
+├── Mousetrap-DnsHook.ps1   # DNS-Hook: TXT-Record per Mousetrap API hinzufügen/entfernen
+├── FULLTEST_WACS.ps1       # Volltest mit Win-ACME (wacs.exe)
+└── dot.env.sample          # Beispiel-Konfiguration
+```
+
+## Konfiguration
+
+```powershell
+Copy-Item dot.env.sample .env
+# .env anpassen
+```
+
+| Variable             | Beschreibung                                          |
+|----------------------|-------------------------------------------------------|
+| `MOUSETRAP_API_URL`  | URL des Mousetrap-Service                             |
+| `MOUSETRAP_TOKEN`    | Bearer Token (base64-kodiert)                         |
+| `MOUSETRAP_ZONE`     | DNS-Zone mit abschließendem Punkt, z.B. `example.de.` |
+| `APP_DOMAIN`         | Domain für das Zertifikat                             |
 
 ## Mousetrap-DnsHook.ps1
 
-Dieses Skript implementiert die Logik zum Hinzufügen und Entfernen von DNS-TXT-Einträgen für die ACME DNS-01 Challenge.
+DNS-Hook-Skript für Windows-ACME-Clients. Implementiert `Add` und `Remove` von `_acme-challenge`-TXT-Records über die Mousetrap API.
 
-### Voraussetzungen
+**Voraussetzungen:** PowerShell 5.1+ (PowerShell 7 empfohlen), Netzwerkzugriff auf die Mousetrap-API.
 
-- PowerShell 5.1 oder höher (PowerShell 7 empfohlen)
-- Netzwerkzugriff auf die Mousetrap-API
-
-### Verwendung
-
-Das Skript kann direkt aufgerufen werden. Es benötigt Parameter für die Aktion (Add/Remove), die Domain, den Challenge-Token und die Authentifizierung.
+### Direktaufruf
 
 ```powershell
-# Beispiel: Hinzufügen eines Challenge-Eintrags
+# Record hinzufügen
 .\Mousetrap-DnsHook.ps1 `
     -Action Add `
-    -FullDomain "_acme-challenge.test.example.com" `
-    -TxtValue "DEINE_CHALLENGE_TOKEN" `
+    -FullDomain "_acme-challenge.test.example.de" `
+    -TxtValue "mein-challenge-token" `
+    -ApiUrl "http://mousetrap-server:8080/api/v1/micetro" `
     -Token "DEIN_MOUSETRAP_TOKEN" `
-    -Zone "example.com." `
-    -ApiUrl "http://mousetrap-server:8080/api/v1/micetro"
+    -Zone "example.de."
+
+# Record entfernen
+.\Mousetrap-DnsHook.ps1 `
+    -Action Remove `
+    -FullDomain "_acme-challenge.test.example.de" `
+    -TxtValue "mein-challenge-token" `
+    -ApiUrl "http://mousetrap-server:8080/api/v1/micetro" `
+    -Token "DEIN_MOUSETRAP_TOKEN" `
+    -Zone "example.de."
 ```
 
-### Integration in Tools
+## FULLTEST_WACS.ps1
 
-Dieses Skript kann als "Pre-Request" und "Post-Request" Hook in Zertifikats-Management-Tools wie **WACS**, **Certify The Web** oder **Posh-ACME** verwendet werden.
+Volltest-Skript für [Win-ACME (wacs.exe)](https://github.com/win-acme/win-acme). Liest die Konfiguration aus `.env` und ruft `wacs.exe` mit den passenden `--dnscreatescript`/`--dnsdeletescript`-Argumenten auf.
 
-#### Beispiel
+**Voraussetzung:** `wacs.exe` muss im `PATH` verfügbar sein.
 
-- https://github.com/win-acme/win-acme
+```powershell
+.\FULLTEST_WACS.ps1
+```
+
+### Manuelle Win-ACME-Integration
 
 ```
-wacs.exe --test --validationmode dns-01 --validation script --dnscreatescript "C:\Pfad\zu\Mousetrap-DnsHook.ps1" --dnscreatescriptarguments "-Action Add -FullDomain {RecordName} -TxtValue {Token} -Zone example.com." --dnsdeletescript "C:\Pfad\zu\Mousetrap-DnsHook.ps1" --dnsdeletescriptarguments "-Action Remove -FullDomain {RecordName} -TxtValue {Token} -Zone example.com."
+wacs.exe --test `
+  --validationmode dns-01 --validation script `
+  --dnscreatescript "C:\Pfad\zu\Mousetrap-DnsHook.ps1" `
+  --dnscreatescriptarguments "-Action Add -FullDomain {RecordName} -TxtValue {Token} -ApiUrl http://mousetrap:8080/api/v1/micetro -Token DEIN_TOKEN -Zone example.de." `
+  --dnsdeletescript "C:\Pfad\zu\Mousetrap-DnsHook.ps1" `
+  --dnsdeletescriptarguments "-Action Remove -FullDomain {RecordName} -TxtValue {Token} -ApiUrl http://mousetrap:8080/api/v1/micetro -Token DEIN_TOKEN -Zone example.de."
 ```
+
+Das Skript funktioniert analog auch mit **Certify The Web** und **Posh-ACME** als Script-Hook.
